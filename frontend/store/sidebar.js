@@ -1,10 +1,10 @@
 export const state = () => ({
   isDetailMode: false,
-  mobileContent: false,
+  mobileContent: false, // This should be isMobileContent, since it is boolean
   isArtsMode: false,
-  showGallery: false,
-  collapseDetail: false,
-  showLoading: false
+  showGallery: false, // This should be isGalleryShown -> not sure how this functions so my naming might be inaccurate. But this shouldn't start with show (action)
+  collapseDetail: false, // This should be isSideBarCollapsed
+  showLoading: false // isDataLoading
 })
 
 export const mutations = {

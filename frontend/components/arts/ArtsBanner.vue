@@ -71,7 +71,7 @@ export default {
       type: String,
       default: 'RGB(255, 255, 255)'
     },
-    arttype: {
+    arttype: { // This should be camelCased.
       type: String,
       default: 'Public Art'
     },
@@ -103,16 +103,16 @@ export default {
     }
   },
   computed: {
-    isCollapse() {
+    isCollapse() { // This could be named with more details -> isSideBarCollapsed -> Much wordy, but more descriptive. Also note that it's in past tense.
       return this.$store.state.sidebar.collapseDetail
     },
-    showDrawer() {
+    showDrawer() { // The naming here is throwing me off. It says showDrawer--indicates an action, but it's just returning a value.
       return this.$store.state.sidebar.isArtsMode
     },
     artistBanner() {
       return this.media ? this.media.media_file || this.media.image : ''
     },
-    isMobileContent() {
+    isMobileContent() { // Not sure what you mean by isMobileContent
       return this.$store.state.sidebar.mobileContent
     }
   },
@@ -132,10 +132,13 @@ export default {
         this.$router.go(-1)
       }
     },
-    artistImg() {
+    artistImg() { // A bit weird that we're sometimes using Img rather than Image. We could be more consistent.
+      
+      // This should be renamed to getArtistImage because this is under `methods`, unless this is moved to computed.
       return this.artImage || require(`@/assets/images/artist_icon.svg`)
     },
     toggleCollapse() {
+      // This should be toggleSideBar
       this.$store.commit('sidebar/toggleCollapse', !this.isCollapse)
     }
   }

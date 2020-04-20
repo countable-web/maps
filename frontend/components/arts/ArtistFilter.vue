@@ -1,4 +1,5 @@
 <template>
+<!-- Same comment as previous one. This could be named better as it's not exclusive to Artists. `ArtsSearchBar`? -->
   <div class="filter-container">
     <b-form-input
       id="search-artist-input"

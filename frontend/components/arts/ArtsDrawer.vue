@@ -131,29 +131,39 @@ export default {
   },
   computed: {
     showGallery() {
+      // Similar to previous comment. This shouldn't sound like a function because this is a computed value -> Basically a variable.
       return this.$store.state.sidebar.showGallery
     },
     artDetails() {
+      // Nice
       return this.art.art
     },
     listOfPublicArt() {
-      return this.artDetails.public_arts || []
+      // I'm not sure if I'm right on this one, but I would normally not use a computed value for another computed value.
+      // It's not applicable here, but if you remove artDetails, you'd have to update all the other computed values dependent
+      // on that one, and it causes unwarranted updates.
+      return this.artDetails.public_arts || [] // Change this to this.art.art.public_arts -> to make it a stand-alone value
     },
     listOfArtists() {
-      return this.artDetails.artists || []
+      // Same comment above
+      return this.artDetails.artists || [] // Change this to this.art.art.artists -> to make it a stand-alone value
     },
     listOfMedias() {
+      // Nice
+      // Could be shortened to mediaList though. I'm not sure about our conventions, but mediaList sounds better and it's shorter. Actually, same comment goes to the two items above.
       return this.artDetails.medias.filter(
         media => media.file_type !== 'default'
       )
     },
     listOfImageMedia() {
+      // Same comment above. Could be renamed to mediaImageList
       return [
         ...this.listOfPublicArt,
         ...this.listOfMedias.filter(media => media.file_type === 'image')
       ]
     },
     geometry() {
+      // This is my bad. We should have a more consistent data set. Will update this in the future.
       return this.artDetails.geometry || this.artDetails.geom
     }
   },
@@ -162,16 +172,19 @@ export default {
   },
   methods: {
     toggleGallery() {
+      // Nice. Worded perfectly.
       this.$store.commit('sidebar/setGallery', !this.showGallery)
     },
     showMedia(media) {
+      // Nice. Function name sounds like an action as it should.
       this.toggleGallery()
       this.currentMedia = media
     },
-    renderArtistImg(img) {
+    renderArtistImg(img) { // This isn't really rendering. Should be getArtistImage, I assume.
       return img || require(`@/assets/images/${this.artDetails.type}_icon.svg`)
     },
     checkArtistProfile(name) {
+      // Nice
       this.toggleGallery()
       this.$router.push({
         path: `/art/${encodeFPCC(name)}`

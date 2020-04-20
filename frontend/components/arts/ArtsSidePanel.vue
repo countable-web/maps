@@ -146,6 +146,11 @@ export default {
     }
   },
   computed: {
+    // It's weird that these are under computed. Shouldn't these be functions?
+    // getCurrentIndex, getIsFirstImage, getIsLastImage -> Or something like those.
+
+    // A bit of context for my comment, based on the link below, You use Computed if -> You need to compose new data from existing data sources. As it looks, imgIndex is a state value that often changes.
+    // https://medium.com/notonlycss/the-difference-between-computed-and-methods-in-vue-js-9cb05c59ed98
     currentIndex() {
       return this.imgIndex
     },
@@ -168,11 +173,11 @@ export default {
       this.imgIndex = index
       this.$refs.galleryCarousel.setSlide(index)
     },
-    nextSlide() {
+    nextSlide() { // You might consider renaming to moveToNextSlide
       this.imgIndex += 1
       this.$refs.galleryCarousel.setSlide(this.imgIndex)
     },
-    previousSlide() {
+    previousSlide() { // and moveToPreviousSlide
       this.imgIndex -= 1
       this.$refs.galleryCarousel.setSlide(this.imgIndex)
     },

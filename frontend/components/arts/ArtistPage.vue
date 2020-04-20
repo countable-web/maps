@@ -1,4 +1,5 @@
 <template>
+<!-- Is this being used? -->
   <div v-if="isArtist" class="artist-main-container">
     <ArtistDetailCard
       :art-image="art.properties.image"

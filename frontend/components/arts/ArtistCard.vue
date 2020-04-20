@@ -1,4 +1,6 @@
 <template>
+  <!-- I think we could name this component better. It says ArtistCard, but it's really not exclusive to Artist PlaceNames. -->
+  <!-- Would you guys consider ArtsFeedCard? -->
   <div
     class="artist-card"
     :class="{ 'card-selected': isSelected }"
@@ -80,27 +82,39 @@ export default {
     }
   },
   computed: {
+    // Here's a good read on when to use computed() -> https://medium.com/notonlycss/the-difference-between-computed-and-methods-in-vue-js-9cb05c59ed98
     mediaData() {
+      // This is an exact copy of the `media` Props in line 64, it just has a different variable name
+      // We're not preprocessing the `media` Props in any way, so this shouldn't be under computed
+      // I suggest we get rid of this sort of pattern.
       return this.media
     },
     artists() {
+      // This, I think, is a good usage. However, I believe it shouldn't 
+      // be dependent on another computed variable. You could go with
+      // return this.media.properties.artists
       return this.mediaData.properties.artists
     },
     mediaType() {
+      // Same comment for artists.
       return this.mediaData.file_type
     },
     videoThumbnail() {
+      // Good usage. Just don't use mediaData.
       return `https://img.youtube.com/vi/${this.getYoutubeVideoID(
         this.mediaData.url
       )}/hqdefault.jpg`
     },
     isLayoutTile() {
+      // Nice
       return this.layout !== 'landscape'
     },
     mediaExist() {
+      // Nice -> Could be renamed to mediaExists. With 's' as it is singular.
       return this.mediaData.media_file !== null
     },
     artImage() {
+      // Good usage. Would be better if this had a comment. It's not readable, so a helptext would be great.
       return this.mediaExist
         ? this.mediaData.media_file
         : this.mediaType === 'video'
@@ -108,6 +122,9 @@ export default {
         : require('@/assets/images/public_art_icon.svg')
     },
     returnArtists() {
+      // Same goes here. This should have a comment.
+      // Also, this could be named better. Computed values, in a way, are simply variables,
+      // so this could be named as maybe artistUrls, artistLinks, or artistHrefs.
       const listOfArtist = this.artist
         ? this.artists.map((artist, index) => {
             return `<a href="art/${encodeFPCC(artist.name)}"> ${
@@ -120,6 +137,9 @@ export default {
       return `By ${listOfArtist}`
     },
     returnMediaType() {
+      // This is a bit weird. You're not returning a mediaType, so this shouldn't be
+      // named as returnMediaType or simply mediaType. You're returning a PNG, so this
+      // should be something else. `mediaTypeImage`?
       let mediaType = ''
       switch (this.mediaType) {
         case 'youtube':
@@ -151,6 +171,8 @@ export default {
       this.$eventHub.doneReveal()
     },
     getYoutubeVideoID(url) {
+      // A documentation would be nice here. Other devs wouldn't get why this regex is considered,
+      // nor would they know about what `match[7].length === 11 ? match[7] : false` is.
       const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/
       const match = url.match(regExp)
       return match && match[7].length === 11 ? match[7] : false
