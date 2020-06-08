@@ -29,6 +29,7 @@ def get_new_media_messages(new_medias):
         messages.append(
             "<h3>New Media in Your Languages and Communities</h3><ul>")
         for media in new_medias:
+            link = ''
             if media.placename:
                 link = _place_link(media.placename)
             elif media.community:
@@ -38,9 +39,8 @@ def get_new_media_messages(new_medias):
             preview = ''
             kind = 'media'
             if 'image' in media.file_type:
-                link = ""
                 kind = "image"
-                preview = "<br><img src='{}/static/{}' width=100 style='width:100px;height:auto'/>".format(
+                preview = "<br><img src='{}/media/{}' width=100 style='width:100px;height:auto'/>".format(
                     settings.HOST, media.media_file)
             if media.url:
                 link = media.url
@@ -87,7 +87,7 @@ def get_my_favourites_messages(my_favourites):
                 link = _place_link(fav.place)
                 messages.append(
                     """
-                    <li>your place was favourited! {}</li>
+                    <li>Your place was favourited! {}</li>
                 """.format(
                         link
                     )
@@ -96,7 +96,7 @@ def get_my_favourites_messages(my_favourites):
                 link = _place_link(fav.media.placename)
                 messages.append(
                     """
-                    <li>your contribution was favourited! {}</li>
+                    <li>Your contribution was favourited! {}</li>
                 """.format(
                         link
                     )
@@ -125,7 +125,7 @@ def _place_link(p):
 
 def notify(user, since=None):
     since = since or user.last_notified
-    print("Calculating notifications for", user)
+    # print("Calculating notifications for", user)
     intro = ["(We are in test mode, sending more data than you should actually receive, please let us know of any bugs!)"]
 
     languages = user.languages.all()
@@ -170,7 +170,7 @@ def notify(user, since=None):
     # all placenames, shared with verified members.
     for community in communities:
         new_places = PlaceName.objects.filter(
-            community=community, created__gte=since)
+            community=community, created__gte=since, community_only=True)
         messages += get_new_places_messages(
             new_places, "New Places in {}".format(community.name)
         )
@@ -186,18 +186,24 @@ def notify(user, since=None):
 
     # all media, shared only with verified members.
     new_medias_private = Media.objects.filter(
-        Q(placename__community__in=communities),
+        Q(placename__community__in=communities) |
+        Q(community__in=communities),
+        community_only=True,
         created__gte=since,
     )
     messages += get_new_media_messages(new_medias_private)
 
     # public media. Show public stuff to anyone who has signed up.
     new_medias_public = Media.objects.filter(
-        Q(placename__language__in=languages) | Q(
-            placename__community__in=communities_awaiting_verification),
+        Q(placename__language__in=languages) | 
+        Q(placename__community__in=communities_awaiting_verification) |
+        Q(community__in=communities_awaiting_verification) | 
+        Q(placename__community__in=communities) |
+        Q(community__in=communities),
         # public items.
-        Q(community_only=False) & Q(placename__community_only=False),
-        created__gte=since,
+        (Q(placename__isnull=False) & Q(placename__community_only=False)) | Q(placename__isnull=True),
+        community_only=False,
+        created__gte=since
     )
     messages += get_new_media_messages(new_medias_public)
 
@@ -213,7 +219,7 @@ def notify(user, since=None):
         """.format(
             settings.HOST, user.id
         )
-        print(html)
+        # print(html)
         if user.email in [a[1] for a in settings.ADMINS]:
             print("sending to ", user.email)
             send_mail(
@@ -225,7 +231,7 @@ def notify(user, since=None):
             )
         return html
     else:
-        print("No new information for this person.", intro)
+        print("No new information for this person.")
 
 
 def send():
