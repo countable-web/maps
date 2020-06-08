@@ -139,19 +139,19 @@ def notify(user, since=None):
     if languages.count():
         intro.append(
             "<p>You are receiving updates related to the following languages: {}</p>".format(
-                ",".join([_lang_link(l) for l in languages])
+                ", ".join([_lang_link(l) for l in languages])
             )
         )
     if len(communities):
         intro.append(
             "<p>You are receiving updates related to the following communities: {}</p>".format(
-                ",".join([_comm_link(c) for c in communities])
+                ", ".join([_comm_link(c) for c in communities])
             )
         )
     if len(communities_awaiting_verification):
         intro.append(
             "<p>You are still awaiting membership verification in the following communities: {}</p>".format(
-                ",".join([_comm_link(c)
+                ", ".join([_comm_link(c)
                           for c in communities_awaiting_verification])
             )
         )
