@@ -445,6 +445,12 @@ export default {
     map.on('mouseleave', 'fn-places', e => {
       map.getCanvas().style.cursor = 'default'
     })
+    map.on('mouseenter', 'fn-arts-clusters', e => {
+      map.getCanvas().style.cursor = 'pointer'
+    })
+    map.on('mouseleave', 'fn-arts-clusters', e => {
+      map.getCanvas().style.cursor = 'default'
+    })
 
     addHTMLClusters(map)
 

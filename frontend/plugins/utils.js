@@ -27,7 +27,7 @@ export const makeMarker = (geom, icon, class_name) => {
   const el = document.createElement('div')
   el.className = 'marker art-marker'
   // el.className = class_name ? 'marker' : 'marker ' + class_name
-  el.style = `background-image: url('/${icon}')`
+  el.style = `z-index: 100; background-image: url('/${icon}')`
   return new mapboxgl.Marker(el).setLngLat(geomToLatLng(geom))
 }
 
