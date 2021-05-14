@@ -1,41 +1,25 @@
-import sys
-
-from rest_framework import viewsets, generics, mixins, status
+from rest_framework import mixins, status
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.response import Response
-from rest_framework.decorators import action
 
-from django.shortcuts import render
-from django.db.models import Q
+from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 
-from users.models import User, Administrator
+from web.utils import is_user_permitted
 from language.models import (
-    Language,
-    PlaceName,
-    Community,
-    CommunityMember,
-    Champion,
-    Media,
     Favourite,
     Notification,
-    CommunityLanguageStats,
     Recording,
 )
-
 from language.views import BaseModelViewSet
-
 from language.serializers import (
     FavouriteSerializer,
     NotificationSerializer,
     RecordingSerializer,
 )
+from language import statics
 
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
-from web.permissions import IsAdminOrReadOnly
-from web.utils import is_user_permitted
 
 
 class RecordingViewSet(BaseModelViewSet):
@@ -60,7 +44,7 @@ class NotificationViewSet(BaseModelViewSet):
                 serializer = self.serializer_class(queryset, many=True)
                 return Response(serializer.data)        
 
-        return Response({"message": "Only logged in users can view theirs favourites"}, 
+        return Response({"message": statics.ERROR_LOGIN_REQUIRED}, 
                         status=status.HTTP_401_UNAUTHORIZED)
 
 
@@ -115,7 +99,7 @@ class FavouriteViewSet(FavouriteCustomViewSet, GenericViewSet):
             return super().retrieve(request)
         
         return Response(
-            {'message': 'You are not authorized to view this info.'},
+            {'message': statics.ERROR_UNAUTHORIZED_USER},
             status=status.HTTP_401_UNAUTHORIZED
         )
 
@@ -125,7 +109,7 @@ class FavouriteViewSet(FavouriteCustomViewSet, GenericViewSet):
             return super().destroy(request)
         
         return Response(
-            {'message': 'You are not authorized to perform this action.'},
+            {'message': statics.ERROR_UNAUTHORIZED_USER},
             status=status.HTTP_401_UNAUTHORIZED
         )
 
@@ -138,6 +122,4 @@ class FavouriteViewSet(FavouriteCustomViewSet, GenericViewSet):
                 queryset = queryset.filter(user__id = request.user.id)
                 serializer = self.serializer_class(queryset, many=True)
                 return Response(serializer.data)
-        # Unauthenticated users have zero favourites, instead of returning 401 because it
-        # simplifies client implementations.      
         return Response([])
