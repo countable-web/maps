@@ -1,43 +1,28 @@
 import sys
-import copy
-
 from django.db.models import Q
-from django_filters.rest_framework import DjangoFilterBackend
-from django_filters import FilterSet
 from django.views.decorators.cache import never_cache
 from django.contrib.auth.decorators import login_required
-from django.contrib.gis.geos import Point, Polygon
+from django.contrib.gis.geos import Point
 from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
-from django.core.exceptions import PermissionDenied
+from django_filters.rest_framework import DjangoFilterBackend
+from django_filters import FilterSet
 
-from rest_framework import viewsets, generics, mixins, status
-from rest_framework.viewsets import GenericViewSet
+from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 
-from users.models import User, Administrator
+from users.models import Administrator
 from language.models import (
     Language,
     PlaceName,
-    Community,
     CommunityMember,
-    Champion,
     Media,
-    Favourite,
-    Notification,
-    CommunityLanguageStats,
     PublicArtArtist
 )
-from language.notifications import (
-    inform_placename_rejected_or_flagged,
-    inform_placename_to_be_verified,
-)
+from language.notifications import inform_placename_rejected_or_flagged, inform_placename_to_be_verified
 from language.filters import ListFilter
-
 from language.views import BaseModelViewSet, BasePlaceNameListAPIView
-
 from language.serializers import (
     PlaceNameSerializer,
     PlaceNameDetailSerializer,
@@ -48,9 +33,7 @@ from language.serializers import (
     ArtworkSerializer,
     ArtworkPlaceNameSerializer
 )
-from web.permissions import IsAdminOrReadOnly
-from web.utils import is_user_permitted
-
+from language import statics
 
 class PlaceNameFilterSet(FilterSet):
     kinds = ListFilter(field_name='kind', lookup_expr='in')
@@ -90,7 +73,7 @@ class PlaceNameViewSet(BaseModelViewSet):
 
         return Response({
             "success": False,
-            "message": "You need to log in in order to create a PlaceName."
+            "message": statics.ERROR_LOGIN_REQUIRED
         })
 
     def perform_create(self, serializer):
@@ -131,12 +114,12 @@ class PlaceNameViewSet(BaseModelViewSet):
                 else:
                     return Response({
                         "success": False,
-                        "message": "Only the owner or the artist can update this PlaceName."
+                        "message": statics.ERROR_UNAUTHORIZED_USER
                     })
         
         return Response({
             "success": False,
-            "message": "You need to log in in order to update this PlaceName."
+            "message": statics.ERROR_LOGIN_REQUIRED
         })
 
     def destroy(self, request, *args, **kwargs):
@@ -152,12 +135,12 @@ class PlaceNameViewSet(BaseModelViewSet):
                 else:
                     return Response({
                         "success": False,
-                        "message": "Only the owner can delete this PlaceName."
+                        "message": statics.ERROR_UNAUTHORIZED_USER
                     })
         
         return Response({
             "success": False,
-            "message": "You need to log in in order to delete this PlaceName."
+            "message": statics.ERROR_LOGIN_REQUIRED
         })
 
     @action(detail=True, methods=["patch"])
@@ -168,17 +151,17 @@ class PlaceNameViewSet(BaseModelViewSet):
                     PlaceName.verify(int(pk))
                     return Response({
                         "success": True,
-                        "message": "Verified."
+                        "message": statics.MESSAGE_PLACENAME_VERIFIED
                     })
                 except PlaceName.DoesNotExist:
                     return Response({
                         "success": False,
-                        "message": "No PlaceName with the given id was found."
+                        "message": "PlaceName not found."
                     })
 
         return Response({
             "success": False,
-            "message": "Only Administrators can verify contributions."
+            "message": statics.ERROR_UNAUTHORIZED_USER
         })
 
     @action(detail=True, methods=["patch"])
@@ -199,7 +182,7 @@ class PlaceNameViewSet(BaseModelViewSet):
 
                         return Response({
                             "success": True,
-                            "message": "Rejected."
+                            "message": statics.ERROR_PLACENAME_REJECTED
                         })
                     else:
                         return Response({
@@ -209,12 +192,12 @@ class PlaceNameViewSet(BaseModelViewSet):
                 except PlaceName.DoesNotExist:
                     return Response({
                         "success": False,
-                        "message": "No PlaceName with the given id was found."
+                        "message": "PlaceName not found."
                     })
 
         return Response({
             "success": False,
-            "message": "Only Administrators can reject contributions."
+            "message": statics.ERROR_UNAUTHORIZED_USER
         })
 
     @action(detail=True, methods=["patch"])
@@ -255,7 +238,7 @@ class PlaceNameViewSet(BaseModelViewSet):
         except PlaceName.DoesNotExist:
             return Response({
                 "success": False,
-                "message": "No PlaceName with the given id was found."
+                "message": "PlaceName not found."
             })
 
     @method_decorator(never_cache)
@@ -286,10 +269,6 @@ class PlaceNameViewSet(BaseModelViewSet):
         serializer_data['related_data'] = related_data
 
         return Response(serializer_data)
-        # if request and hasattr(request, "user"):
-        #     if request.user.is_authenticated:
-
-        # return super().retrieve(request)
 
     @method_decorator(never_cache)
     @action(detail=False)

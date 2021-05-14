@@ -13,6 +13,7 @@ NODES_WITH_ARTWORK = [
 ]
 
 # LANGUAGE/COMMUNITY STATIC
+MESSAGE_PLACENAME_VERIFIED = 'PlaceName is now verified.'
 MESSAGE_MEMBER_VERIFIED = 'Member is now verified.'
 MESSAGE_MEDIA_VERIFIED = 'Media is now verified.'
 
@@ -27,3 +28,5 @@ ERROR_NO_COMMUNITY = 'No Community was sent in the request.'
 ERROR_MEMEBERSHIP_REJECTED = 'Membership request was rejected.'
 ERROR_MEMBERSHIP_NO_USER = 'No User was sent in the request.'
 ERROR_MEMBERSHIP_NO_COMMUNITY = 'No Community was sent in the request.'
+
+ERROR_PLACENAME_REJECTED = 'PlaceName request was rejected.'
