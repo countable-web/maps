@@ -8,6 +8,7 @@ from django.contrib.gis.geos import Point
 
 from web import dedruplify
 from grants.models import Grant
+from grants.statics import NEW_CATEGORIES, CATEGORY_ABBREVIATIONS, CATEGORY_NAMES
 
 
 class Command(BaseCommand):
@@ -15,6 +16,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         sync_grants()
+        print('LOADED GRANTS')
 
 
 def sync_grants():
@@ -32,54 +34,6 @@ def sync_grants():
     c.load_grants_from_spreadsheet()
 
 
-NEW_CATEGORIES = {
-    "Individual Emerging Artist": "Individual Artists Grant",
-    "Sharing Traditional Arts": "Sharing Traditional Arts Grant",
-    "Organizations and Collectives": "Organizations and Collectives Grant",
-    "Arts Administrator Internships": "Arts Administration Internships Grant",
-    "Aboriginal Youth Engaged in the Arts": "Aboriginal Youth Engaged in the Arts Grant",
-    "Music Industry Professionals": "Emerging Music Industry Professionals Grant",
-    "Music Recording Industry": "Expanding Capacity in the Indigenous Music Recording Industry Grant",
-}
-
-CATEGORY_ABBREVIATIONS = {
-    "Individual Artists Grant": "AIND",
-    "Sharing Traditional Arts Grant": "ASHR",
-    "Organizations and Collectives Grant": "AORG",
-    "Arts Administration Internships Grant": "AADM",
-    "Aboriginal Youth Engaged in the Arts Grant": "AAYEA",
-    "Emerging Music Industry Professionals Grant": "AEMIP",
-    "Expanding Capacity in the Indigenous Music Recording Industry Grant": "AECMR",
-}
-
-CATEGORY_NAMES = {
-    "ARTS": "Arts One Time Grant",
-    "AIND": "Individual Artists Grant",
-    "ASHR": "Sharing Traditional Arts Grant",
-    "AORG": "Organizations and Collectives Grant",
-    "AADM": "Arts Administration Internships Grant",
-    "AMIC": "Arts Micro Grants",
-    "ALND": "Community Land Based Arts Grant",
-    "AEMIP": "Emerging Music Industry Professionals Grant",
-    "AECMR": "Expanding Capacity in the Indigenous Music Recording Industry Grant",
-    "ATPMP": "Touring, Promotion/Marketing and Performance Grant",
-    "HMIC": "Indigenous Heritage Micro Grant",
-    "HSOP": "Sense of Place Grant",
-    "LALI": "Aboriginal Languages Initiative",
-    "LBCLI": "BC Language Initiative",
-    "LDIGI": "Digitization Program",
-    "LFV": "FirstVoices Program",
-    "LILG": "Indigenous Languages Grant",
-    "LANG": "Language One Time Grant",
-    "LLN": "Language Nest Program",
-    "LLRPP": "Language Revitalization Planning Program",
-    "LMAP": "Mentor-Apprentice Program",
-    "LPATH": "Pathways to Language Vitality Program",
-    "LRML": "Reclaiming My Language Program",
-    "LTECH": "Language Technology Program",
-    "LYES": "Youth Empowered Speakers Program",
-}
-
 class Client(dedruplify.DeDruplifierClient):
 
     def load_grants_from_arts_db(self):
@@ -88,7 +42,8 @@ class Client(dedruplify.DeDruplifierClient):
         grant_data = {}
 
         writer = csv.writer(open('old-arts-grants.csv', 'w'))
-        writer.writerow(["Year", "Grant", "Language", "Recipient", "Community/Affiliation", "Title", "Project Brief", "Amount", "Address", "City", "Province", "Postal Code", "Status", "Category", "Node ID"])
+        writer.writerow(["Year", "Grant", "Language", "Recipient", "Community/Affiliation", "Title", "Project Brief",
+                         "Amount", "Address", "City", "Province", "Postal Code", "Status", "Category", "Node ID"])
 
         for grant in grants:
             grant_id = grant.get("nid", "")
@@ -98,8 +53,10 @@ class Client(dedruplify.DeDruplifierClient):
             grant_data["affiliation"] = self.get_affiliation(grant_id)
             grant_data["project_brief"] = self.get_project_brief(grant_id)
 
-            grant_data["recipient"] = self.update_recipient(self.get_recipient(grant_id), grant_title, grant_id)
-            grant_data["category"] = self.update_category(self.get_category(grant_id))
+            grant_data["recipient"] = self.update_recipient(
+                self.get_recipient(grant_id), grant_title, grant_id)
+            grant_data["category"] = self.update_category(
+                self.get_category(grant_id))
 
             location = self.get_location(grant_id)
             grant_data["address"] = location.get(
@@ -109,24 +66,25 @@ class Client(dedruplify.DeDruplifierClient):
                 "province", "") if location else ""
             grant_data["postal_code"] = location.get(
                 "postal_code", "") if location else ""
-            
-            updated_grant_title = self.update_grant_title(grant_data["category"], grant_data["year"], grant_title)
+
+            updated_grant_title = self.update_grant_title(
+                grant_data["category"], grant_data["year"], grant_title)
             grant_data["grant"] = updated_grant_title
 
             writer.writerow([
                 f"{grant_data['year']}",
                 f"{grant_data['grant']}",
-                "", # For language
+                "",  # For language
                 f"{grant_data['recipient']}",
                 f"{grant_data['affiliation']}",
-                f"{grant_title }", # For title
+                f"{grant_title }",  # For title
                 f"{grant_data['project_brief']}",
-                "", # For Amount
+                "",  # For Amount
                 f"{grant_data['address']}",
                 f"{grant_data['city']}",
                 f"{grant_data['province']}",
                 f"{grant_data['postal_code']}",
-                "", # For status
+                "",  # For status
                 f"{grant_data['category']}",
                 f"{grant_id}"
             ])
@@ -136,8 +94,8 @@ class Client(dedruplify.DeDruplifierClient):
                location.get("latitude", None) and \
                location.get("longitude", None):
                 point = Point(
-                   float(location.get("longitude")),
-                   float(location.get("latitude"))
+                    float(location.get("longitude")),
+                    float(location.get("latitude"))
                 )
 
             Grant.objects.create(
@@ -153,7 +111,7 @@ class Client(dedruplify.DeDruplifierClient):
                 category=grant_data["category"],
                 point=point
             )
-    
+
     def load_grants_from_spreadsheet(self):
         # Convert excel into dataframe
         grants_dataframe = pd.read_excel("grants.xlsx", sheet_name=0)
@@ -161,7 +119,8 @@ class Client(dedruplify.DeDruplifierClient):
         # Replace NaN values with empty string
         grants_dataframe.fillna('', inplace=True)
         writer = csv.writer(open('spreadsheet-grants.csv', 'w'))
-        writer.writerow(["Year", "Grant", "Language", "Recipient", "Community/Affiliation", "Title", "Project Brief", "Amount", "Address", "City", "Province", "Postal Code", "Status", "Category", "Node ID"])
+        writer.writerow(["Year", "Grant", "Language", "Recipient", "Community/Affiliation", "Title", "Project Brief",
+                         "Amount", "Address", "City", "Province", "Postal Code", "Status", "Category", "Node ID"])
 
         for index, sheet_row in grants_dataframe.iterrows():
             writer.writerow([
@@ -177,7 +136,7 @@ class Client(dedruplify.DeDruplifierClient):
                 f"{sheet_row['City']}",
                 f"{sheet_row['Province']}",
                 f"{sheet_row['Postal Code']}",
-                "", # For status
+                "",  # For status
                 "",
                 ""
             ])
@@ -208,7 +167,7 @@ class Client(dedruplify.DeDruplifierClient):
             if not recipient:
                 if title:
                     title_data = title.split("- ")
-                    
+
                     if title_data:
                         return title_data[0].strip()
 
@@ -225,7 +184,7 @@ class Client(dedruplify.DeDruplifierClient):
             category_abbreviation = CATEGORY_ABBREVIATIONS[category]
             year_start = int(year)
             year_end = abs(year_start) % 100 + 1
-            
+
             return "{} {}-{}".format(category_abbreviation, year_start, year_end)
 
         return title
