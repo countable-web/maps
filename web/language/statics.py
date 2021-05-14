@@ -13,7 +13,8 @@ NODES_WITH_ARTWORK = [
 ]
 
 # LANGUAGE/COMMUNITY STATIC
-MESSAGE_USER_VERIFIED = 'User is now Verified.'
+MESSAGE_MEMBER_VERIFIED = 'Member is now verified.'
+MESSAGE_MEDIA_VERIFIED = 'Media is now verified.'
 
 ERROR_LOGIN_REQUIRED = 'You need to be logged to perform this action.'
 ERROR_UNAUTHORIZED_USER = 'You are not authorized to perform this action.'
@@ -23,6 +24,6 @@ ERROR_NO_RECORDING = 'No Recording was sent in the request.'
 ERROR_NO_LANGUAGE = 'No Language was sent in the request.'
 ERROR_NO_COMMUNITY = 'No Community was sent in the request.'
 
-ERROR_MEMEBERSHIP_REJECTED = 'Membership request was Rejected.'
+ERROR_MEMEBERSHIP_REJECTED = 'Membership request was rejected.'
 ERROR_MEMBERSHIP_NO_USER = 'No User was sent in the request.'
 ERROR_MEMBERSHIP_NO_COMMUNITY = 'No Community was sent in the request.'

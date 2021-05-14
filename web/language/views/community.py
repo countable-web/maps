@@ -208,7 +208,7 @@ class CommunityViewSet(BaseModelViewSet):
                         )
                         CommunityMember.verify_member(member[0].id)
 
-                        return Response({"message": statics.MESSAGE_USER_VERIFIED})
+                        return Response({"message": statics.MESSAGE_MEMBER_VERIFIED})
                     else:
                         return Response({"message", statics.ERROR_USER_ALREADY_A_MEMBER})
                 else:

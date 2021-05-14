@@ -1,41 +1,18 @@
-import sys
 
-from django.shortcuts import render
 from django.db.models import Q
-from django_filters.rest_framework import DjangoFilterBackend
-
-from users.models import User, Administrator
-from language.models import (
-    Language,
-    PlaceName,
-    Community,
-    CommunityMember,
-    Champion,
-    Media,
-    Favourite,
-    Notification,
-    CommunityLanguageStats,
-)
-from language.notifications import (
-    inform_media_rejected_or_flagged,
-    inform_media_to_be_verified,
-)
-
 from django.views.decorators.cache import never_cache
-from rest_framework import viewsets, generics, mixins, status
+from django.utils.decorators import method_decorator
+from rest_framework.decorators import action
+from rest_framework import mixins
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.response import Response
-from rest_framework.decorators import action
+from django_filters.rest_framework import DjangoFilterBackend
 
-from language.views import BaseModelViewSet
-
-from language.serializers import (
-    MediaSerializer,
-)
-
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
-from web.permissions import IsAdminOrReadOnly
+from users.models import Administrator
+from language.models import CommunityMember, Media
+from language.notifications import inform_media_rejected_or_flagged, inform_media_to_be_verified
+from language.serializers import MediaSerializer
+from language import statics
 
 
 # To enable only CREATE and DELETE, we create a custom ViewSet class...
@@ -63,7 +40,7 @@ class MediaViewSet(MediaCustomViewSet, GenericViewSet):
 
         return Response({
             "success": False,
-            "message": "You need to log in in order to create a Media record."
+            "message": statics.ERROR_LOGIN_REQUIRED
         })
 
     def perform_create(self, serializer):
@@ -89,12 +66,12 @@ class MediaViewSet(MediaCustomViewSet, GenericViewSet):
                 else:
                     return Response({
                         "success": False,
-                        "message": "Only the owner can update this Media record."
+                        "message": statics.ERROR_UNAUTHORIZED_USER
                     })
         
         return Response({
             "success": False,
-            "message": "You need to log in in order to update this Media record."
+            "message": statics.ERROR_LOGIN_REQUIRED
         })
 
     def destroy(self, request, *args, **kwargs):
@@ -110,12 +87,12 @@ class MediaViewSet(MediaCustomViewSet, GenericViewSet):
                 else:
                     return Response({
                         "success": False,
-                        "message": "Only the owner can delete this Media record."
+                        "message": statics.ERROR_UNAUTHORIZED_USER
                     })
         
         return Response({
             "success": False,
-            "message": "You need to log in in order to delete this Media record."
+            "message": statics.ERROR_LOGIN_REQUIRED
         })
 
     @method_decorator(never_cache)
@@ -157,17 +134,17 @@ class MediaViewSet(MediaCustomViewSet, GenericViewSet):
                     Media.verify(int(pk))
                     return Response({
                         "success": True,
-                        "message": "Verified."
+                        "message": statics.MESSAGE_MEDIA_VERIFIED
                     })
                 except Media.DoesNotExist:
                     return Response({
                         "success": False,
-                        "message": "No Media with the given id was found."
+                        "message": "Media not found."
                     })
 
         return Response({
             "success": False,
-            "message": "Only Administrators can verify contributions."
+            "message": statics.ERROR_UNAUTHORIZED_USER
         })
 
     @action(detail=True, methods=["patch"])
@@ -187,7 +164,7 @@ class MediaViewSet(MediaCustomViewSet, GenericViewSet):
 
                         return Response({
                             "success": True,
-                            "message": "Rejected."
+                            "message": statics.ERROR_MEMEBERSHIP_REJECTED
                         })
                     else:
                         return Response({
@@ -197,12 +174,12 @@ class MediaViewSet(MediaCustomViewSet, GenericViewSet):
                 except Media.DoesNotExist:
                     return Response({
                         "success": False,
-                        "message": "No Media with the given id was found."
+                        "message": "Media not found."
                     })
 
         return Response({
             "success": False,
-            "message": "Only Administrators can reject contributions."
+            "message": statics.ERROR_UNAUTHORIZED_USER
         })
 
     @action(detail=True, methods=["patch"])
@@ -243,7 +220,7 @@ class MediaViewSet(MediaCustomViewSet, GenericViewSet):
         except Media.DoesNotExist:
             return Response({
                 "success": False,
-                "message": "No Media with the given id was found."
+                "message": "Media not found."
             })
 
     # Users can contribute this data, so never cache it.
