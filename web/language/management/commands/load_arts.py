@@ -1,25 +1,27 @@
-from django.core.management.base import BaseCommand
-from django.conf import settings
-from django.db import transaction
-from language.models import PlaceName, Media, PublicArtArtist, Taxonomy, PlaceNameTaxonomy, RelatedData
-from django.contrib.gis.geos import Point
-
 import os
 import sys
 import json
-
 import pymysql
 import requests
 import glob
 import shutil
+
+from django.core.management.base import BaseCommand
+from django.conf import settings
+from django.db import transaction
+from django.contrib.gis.geos import Point
+
 from web import dedruplify
+from language.statics import TYPE_MAP, NODES_WITH_ARTWORK
+from language.models import PlaceName, Media, PublicArtArtist, Taxonomy, PlaceNameTaxonomy, RelatedData
 
 
 class Command(BaseCommand):
-    help = "Loads arts from fixtures/arts.json."
+    help = "Loads arts from the old arts database (from the old Arts Map drupal site)."
 
     def handle(self, *args, **options):
         sync_arts()
+        print('LOADED ARTS')
 
 
 def sync_arts():
@@ -33,18 +35,6 @@ def sync_arts():
     c.update()
     c.load_arts()
     c.load_taxonomies()
-
-
-TYPE_MAP = {
-    "art": "public_art",
-    "org": "organization",
-    "per": "artist",
-    "event": "event",
-    "resource": "resource",
-    "grant": "grant"
-}
-
-NODES_WITH_ARTWORK = ["public_art", "artist"]
 
 
 class Client(dedruplify.DeDruplifierClient):
@@ -62,20 +52,20 @@ class Client(dedruplify.DeDruplifierClient):
         artsmap_path = "{}{}{}".format(
             settings.BASE_DIR, settings.MEDIA_URL, "fp-artsmap")
 
-        # # COMMENT IF MEDIA IS ALREADY DOWNLOADED
-        # # Delete fp-artsmap directory contents if it exists
-        # if os.path.exists(artsmap_path):
-        #     files = glob.glob("{}/*".format(artsmap_path))
-        #     for f in files:
-        #         if os.path.isfile(f):
-        #             os.remove(f)
-        #         elif os.path.isdir(f):
-        #             shutil.rmtree(f)
+        # COMMENT IF MEDIA IS ALREADY DOWNLOADED
+        # Delete fp-artsmap directory contents if it exists
+        if os.path.exists(artsmap_path):
+            files = glob.glob("{}/*".format(artsmap_path))
+            for f in files:
+                if os.path.isfile(f):
+                    os.remove(f)
+                elif os.path.isdir(f):
+                    shutil.rmtree(f)
 
-        # # Create fp-artsmap directory
-        # if not os.path.exists(artsmap_path):
-        #     os.mkdir(artsmap_path)
-        # # END COMMENT
+        # Create fp-artsmap directory
+        if not os.path.exists(artsmap_path):
+            os.mkdir(artsmap_path)
+        # END COMMENT
 
         # SETUP FOR SAVING PLACENAMES
         node_placenames_geojson = self.nodes_to_geojson()
@@ -237,14 +227,14 @@ class Client(dedruplify.DeDruplifierClient):
                             media_path = "{}/{}".format("fp-artsmap",
                                                         uri.replace("public://", ""))
 
-                            # # COMMENT IF MEDIA IS ALREADY DOWNLOADED
-                            # if not os.path.exists(os.path.dirname(storage_path)):
-                            #     print('Creating ' + os.path.dirname(storage_path))
-                            #     os.makedirs(os.path.dirname(storage_path), exist_ok=True)
+                            # COMMENT IF MEDIA IS ALREADY DOWNLOADED
+                            if not os.path.exists(os.path.dirname(storage_path)):
+                                print('Creating ' + os.path.dirname(storage_path))
+                                os.makedirs(os.path.dirname(storage_path), exist_ok=True)
 
-                            # response = requests.get(download_url, allow_redirects=True)
-                            # open(storage_path, 'wb').write(response.content)
-                            # # END COMMENT
+                            response = requests.get(download_url, allow_redirects=True)
+                            open(storage_path, 'wb').write(response.content)
+                            # END COMMENT
 
                         # If the media is a display picture, save it in the PlaceName
                         if fid == rec["properties"]["display_picture"]:
