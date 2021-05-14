@@ -35,6 +35,7 @@ from language.serializers import (
 )
 from language import statics
 
+
 class PlaceNameFilterSet(FilterSet):
     kinds = ListFilter(field_name='kind', lookup_expr='in')
 
@@ -92,17 +93,19 @@ class PlaceNameViewSet(BaseModelViewSet):
         if request and hasattr(request, "user"):
             if request.user.is_authenticated:
                 placename = PlaceName.objects.get(pk=kwargs.get('pk'))
-                
+
                 # Check if placename is owned by current user
                 owned_placename = True if placename.creator == request.user else False
 
                 # Check if this placename is a public art and the user is its artist
                 artist_owned_placename = False
-                artist_profile_ids = PlaceName.objects.filter(kind='artist', creator=request.user).values_list('id', flat=True)
+                artist_profile_ids = PlaceName.objects.filter(
+                    kind='artist', creator=request.user).values_list('id', flat=True)
 
                 if artist_profile_ids and placename.kind == 'public_art':
                     try:
-                        owned_public_art = PublicArtArtist.objects.get(artist__in=artist_profile_ids, public_art=placename)
+                        owned_public_art = PublicArtArtist.objects.get(
+                            artist__in=artist_profile_ids, public_art=placename)
                     except PublicArtArtist.DoesNotExist:
                         owned_public_art = None
 
@@ -116,7 +119,7 @@ class PlaceNameViewSet(BaseModelViewSet):
                         "success": False,
                         "message": statics.ERROR_UNAUTHORIZED_USER
                     })
-        
+
         return Response({
             "success": False,
             "message": statics.ERROR_LOGIN_REQUIRED
@@ -126,7 +129,7 @@ class PlaceNameViewSet(BaseModelViewSet):
         if request and hasattr(request, "user"):
             if request.user.is_authenticated:
                 placename = PlaceName.objects.get(pk=kwargs.get('pk'))
-                
+
                 # Check if placename is owned by current user
                 owned_placename = True if placename.creator == request.user else False
 
@@ -137,7 +140,7 @@ class PlaceNameViewSet(BaseModelViewSet):
                         "success": False,
                         "message": statics.ERROR_UNAUTHORIZED_USER
                     })
-        
+
         return Response({
             "success": False,
             "message": statics.ERROR_LOGIN_REQUIRED
@@ -265,7 +268,7 @@ class PlaceNameViewSet(BaseModelViewSet):
 
             if data['value'] is not '':
                 related_data.append(data)
-        
+
         serializer_data['related_data'] = related_data
 
         return Response(serializer_data)
