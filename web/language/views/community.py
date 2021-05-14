@@ -116,12 +116,12 @@ class CommunityViewSet(BaseModelViewSet):
         if is_user_community_admin(request, instance):
             if 'recording_id' not in request.data.keys():
                 return Response(
-                    {"message": statics.ERROR_AUDIO_NO_RECORDING},
+                    {"message": statics.ERROR_NO_RECORDING},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             if not pk:
                 return Response(
-                    {"message": statics.ERROR_AUDIO_NO_COMMUNITY},
+                    {"message": statics.ERROR_NO_COMMUNITY},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 

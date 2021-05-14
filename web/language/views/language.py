@@ -1,33 +1,25 @@
 import sys
 
-from django.shortcuts import render
-from django.db.models import Q
-
-from users.models import User, Administrator
-from language.models import (
-    Language,
-    Community,
-    Recording,
-)
-
+from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
-from rest_framework import viewsets, generics, mixins, status
-from rest_framework.viewsets import GenericViewSet
+from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
+from web.permissions import IsAdminOrReadOnly
+from users.models import User
 from language.views import BaseModelViewSet
-
+from language.models import (
+    Language,
+    Recording,
+)
 from language.serializers import (
     LanguageGeoSerializer,
     LanguageSerializer,
     LanguageDetailSerializer,
     LanguageSearchSerializer
 )
-
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
-from web.permissions import IsAdminOrReadOnly
+from language import statics
 
 
 class LanguageViewSet(BaseModelViewSet):
@@ -48,31 +40,35 @@ class LanguageViewSet(BaseModelViewSet):
     @action(detail=True, methods=["patch"])
     def add_language_audio(self, request, pk):
         if 'recording_id' not in request.data.keys():
-            return Response({"message": "No Recording was sent in the request"})
+            return Response({"message": statics.ERROR_NO_RECORDING})
         if not pk:
-            return Response({"message": "No Language was sent in the request"})
+            return Response({"message": statics.ERROR_NO_LANGUAGE})
+
         recording_id = int(request.data["recording_id"])
         language_id = int(pk)
         language = Language.objects.get(pk=language_id)
         recording = Recording.objects.get(pk=recording_id)
         language.language_audio = recording
         language.save()
-        return Response({"message": "Language audio associated"}, 
+
+        return Response({"message": "Language audio associated."},
                         status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["patch"])
     def add_greeting_audio(self, request, pk):
         if 'recording_id' not in request.data.keys():
-            return Response({"message": "No Recording was sent in the request"})
+            return Response({"message": statics.ERROR_NO_RECORDING})
         if not pk:
-            return Response({"message": "No Language was sent in the request"})
+            return Response({"message": statics.ERROR_NO_LANGUAGE})
+
         recording_id = int(request.data["recording_id"])
         language_id = int(pk)
         language = Language.objects.get(pk=language_id)
         recording = Recording.objects.get(pk=recording_id)
         language.greeting_audio = recording
         language.save()
-        return Response({"message": "Greeting audio associated"}, 
+
+        return Response({"message": "Greeting audio associated."},
                         status=status.HTTP_200_OK)
 
     def create_membership(self, request):
