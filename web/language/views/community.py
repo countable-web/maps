@@ -28,6 +28,7 @@ from language.serializers import (
     CommunityLanguageStatsSerializer,
     CommunitySearchSerializer
 )
+from language import statics
 
 
 class CommunityViewSet(BaseModelViewSet):
@@ -54,7 +55,7 @@ class CommunityViewSet(BaseModelViewSet):
             return super().update(request, *args, **kwargs)
 
         return Response(
-            {'message': 'You are not authorized to perform this action.'},
+            {'message': statics.ERROR_UNAUTHORIZED_USER},
             status=status.HTTP_401_UNAUTHORIZED
         )
 
@@ -64,7 +65,7 @@ class CommunityViewSet(BaseModelViewSet):
             return super().update(request, *args, **kwargs)
 
         return Response(
-            {'message': 'You are not authorized to perform this action.'},
+            {'message': statics.ERROR_UNAUTHORIZED_USER},
             status=status.HTTP_401_UNAUTHORIZED
         )
 
@@ -115,12 +116,12 @@ class CommunityViewSet(BaseModelViewSet):
         if is_user_community_admin(request, instance):
             if 'recording_id' not in request.data.keys():
                 return Response(
-                    {"message": "No Recording was sent in the request"},
+                    {"message": statics.ERROR_AUDIO_NO_RECORDING},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             if not pk:
                 return Response(
-                    {"message": "No Community was sent in the request"},
+                    {"message": statics.ERROR_AUDIO_NO_COMMUNITY},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
@@ -131,12 +132,12 @@ class CommunityViewSet(BaseModelViewSet):
             community.audio = recording
             community.save()
             return Response(
-                {"message": "Audio associated"},
+                {"message": "Audio associated."},
                 status=status.HTTP_200_OK
             )
 
         return Response(
-            {"message": "You are not authorized to perform this action."},
+            {"message": statics.ERROR_UNAUTHORIZED_USER},
             status=status.HTTP_401_UNAUTHORIZED
         )
 
@@ -146,12 +147,12 @@ class CommunityViewSet(BaseModelViewSet):
         if is_user_community_admin(request, instance):
             if 'user_id' not in request.data.keys():
                 return Response(
-                    {"message": "No User was sent in the request"},
+                    {"message": statics.ERROR_MEMBERSHIP_NO_USER},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             if not pk:
                 return Response(
-                    {"message": "No Community was sent in the request"},
+                    {"message": statics.ERROR_MEMBERSHIP_NO_COMMUNITY},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
@@ -162,12 +163,12 @@ class CommunityViewSet(BaseModelViewSet):
             user.communities.add(community)
             user.save()
             return Response(
-                {"message": "Membership created"},
+                {"message": "Membership created."},
                 status=status.HTTP_200_OK
             )
 
         return Response(
-            {"message": "You are not authorized to perform this action."},
+            {"message": statics.ERROR_UNAUTHORIZED_USER},
             status=status.HTTP_401_UNAUTHORIZED
         )
 
@@ -207,22 +208,22 @@ class CommunityViewSet(BaseModelViewSet):
                         )
                         CommunityMember.verify_member(member[0].id)
 
-                        return Response({"message": "Verified!"})
+                        return Response({"message": statics.MESSAGE_USER_VERIFIED})
                     else:
-                        return Response({"message", "User is already a community member"})
+                        return Response({"message", statics.ERROR_USER_ALREADY_A_MEMBER})
                 else:
-                    return Response({"message", "Only Administrators can verify community members"})
+                    return Response({"message", statics.ERROR_UNAUTHORIZED_USER})
 
-        return Response({"message", "You need to be logged in to verify community members"})
+        return Response({"message", statics.ERROR_LOGIN_REQUIRED})
 
     @action(detail=False, methods=["post"])
     def reject_member(self, request):
         if request and hasattr(request, "user"):
             if request.user.is_authenticated:
                 if 'user_id' not in request.data.keys():
-                    return Response({"message": "No User was sent in the request"})
+                    return Response({"message": statics.ERROR_MEMBERSHIP_NO_USER})
                 if 'community_id' not in request.data.keys():
-                    return Response({"message": "No Community was sent in the request"})
+                    return Response({"message": statics.ERROR_MEMBERSHIP_NO_COMMUNITY})
 
                 user_id = int(request.data["user_id"])
                 community_id = int(request.data["community_id"])
@@ -239,17 +240,17 @@ class CommunityViewSet(BaseModelViewSet):
                             )
                             CommunityMember.reject_member(member[0].id)
 
-                            return Response({"message": "Rejected!"})
+                            return Response({"message": statics.ERROR_MEMEBERSHIP_REJECTED})
                         else:
-                            return Response({"message", "Membership not found"})
+                            return Response({"message", "Membership not found."})
                     except User.DoesNotExist:
-                        return Response({"message": "No User with the given id was found"})
+                        return Response({"message": "User not found."})
                     except Community.DoesNotExist:
-                        return Response({"message": "No Community with the given id was found"})
+                        return Response({"message": "Community not found."})
                 else:
-                    return Response({"message", "Only Administrators can reject community members"})
+                    return Response({"message", statics.ERROR_UNAUTHORIZED_USER})
 
-        return Response({"message", "You need to be logged in to reject community members"})
+        return Response({"message", statics.ERROR_LOGIN_REQUIRED})
 
 
 class CommunityLanguageStatsViewSet(BaseModelViewSet):
