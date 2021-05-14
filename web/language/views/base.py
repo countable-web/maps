@@ -31,8 +31,18 @@ class BaseModelViewSet(viewsets.ModelViewSet):
 class BasePlaceNameListAPIView(generics.ListAPIView):
     """
     Abstract list API view that allows multiple serializers.
+
+    1) If NO USER is logged in, only shows VERIFIED, UNVERIFIED or NULL status content
+    2) If USER IS LOGGED IN, show:
+        2.1) User's contribution regardless the status
+        2.2) User's community_only content from user's communities. Rules:
+            2.2.1) Is NOT COMMUNITY ONLY (False or NULL) but status is VERIFIED, UNVERIFIED or NULL
+            2.2.2 Is COMMUNITY ONLY
+        2.3) Everything from where user is Administrator (language/community pair)
+    
+    Note: Users can contribute this data, so never cache it.
     """
-    # Users can contribute this data, so never cache it.
+
     @method_decorator(never_cache)
     def list(self, request):
         queryset = self.get_queryset()
@@ -43,28 +53,18 @@ class BasePlaceNameListAPIView(generics.ListAPIView):
             if request.user.is_authenticated:
                 user_logged_in = True
 
-        # 1) if NO USER is logged in, only shows VERIFIED, UNVERIFIED or no status content
-        # 2) if USER IS LOGGED IN, show:
-        # 2.1) user's contribution regardless the status
-        # 2.2) community_only content from user's communities. Rules:
-        # 2.2.1) is NOT COMMUNITY ONLY (False or NULL) but status is VERIFIED, UNVERIFIED or NULL
-        # 2.2.2) is COMMUNITY ONLY
-        # 2.3) everything from where user is Administrator (language/community pair)
-
         if user_logged_in:
-
-            # 2.1) user's contribution regardless the status
+            # Rule 2.1
             queryset_user = queryset.filter(creator__id=request.user.id)
 
-            # 2.2) community_only content from user's communities
+            # Rule 2.2
             user_communities = CommunityMember.objects.filter(
                 user__id=int(request.user.id)
             ).filter(
                 status__exact=CommunityMember.VERIFIED
             ).values('community')
 
-            # 2.2.1) is NOT COMMUNITY ONLY (False or NULL) but status is VERIFIED, UNVERIFIED or NULL
-            # 2.2.2) is COMMUNITY ONLY
+            # Specifically Rules 2.2.1 and 2.2.2
             queryset_community = queryset.filter(
                 Q(community_only=False, status__exact=PlaceName.VERIFIED)
                 | Q(community_only=False, status__exact=PlaceName.UNVERIFIED)
@@ -75,7 +75,7 @@ class BasePlaceNameListAPIView(generics.ListAPIView):
                 | Q(community__in=user_communities)
             )
 
-            # 2.3) everything from where user is Administrator (language/community pair)
+            # Rule 2.3
             admin_languages = Administrator.objects.filter(
                 user__id=int(request.user.id)).values('language')
             admin_communities = Administrator.objects.filter(
@@ -94,7 +94,7 @@ class BasePlaceNameListAPIView(generics.ListAPIView):
             else:  # user is not Administrator of anything
                 queryset = queryset_user.union(queryset_community)
 
-        else:  # no user is logged in
+        else:  # User is not authenticated
             queryset = queryset.filter(
                 Q(status__exact=PlaceName.VERIFIED)
                 | Q(status__exact=PlaceName.UNVERIFIED)
